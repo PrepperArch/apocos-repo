@@ -1,3 +1,5 @@
+PACKAGES=apocos-base apocos-desktop apocos-hack apocos-sdr
+
 .ONESHELL:
 
 all:
@@ -15,11 +17,13 @@ build/chroots/pacman.conf: | build/chroots
 build/chroots/root: | build/chroots/pacman.conf
 	mkarchroot -C $(CURDIR)/build/chroots/pacman.conf $(CURDIR)/build/chroots/root base-devel
 
-apocos-base: clean-packages | build/chroots/root
-	git clone https://github.com/PrepperArch/apocos-base.git build/apocos-base \
-		&& cd $(CURDIR)/build/apocos-base \
-		&& makechrootpkg -c -u -r $(CURDIR)/build/chroots -lapocos-base -- makepkg -s \
-		&& mv *.zst $(CURDIR)/any
+apocos-%: | clean-packages build/chroots/root
+	git clone https://github.com/PrepperArch/apocos-$*.git build/apocos-$* \
+		&& cd $(CURDIR)/build/apocos-$* \
+		&& makechrootpkg -c -u -r $(CURDIR)/build/chroots -lapocos-$* -- makepkg -s \
+		&& (cp -n *.zst $(CURDIR)/any | true)
+
+build-all: $(PACKAGES) update-repo
 
 update-repo:
 	repo-add --prevent-downgrade --new \
