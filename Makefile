@@ -1,4 +1,4 @@
-PACKAGES=apocos-base apocos-desktop apocos-hack apocos-sdr
+PACKAGES=apocos-base apocos-desktop apocos-awesome apocos-hack apocos-sdr
 
 .ONESHELL:
 
