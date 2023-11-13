@@ -9,10 +9,10 @@ build/chroots:
 	mkdir -p build/chroots
 
 build/chroots/pacman.conf: | build/chroots
-	cat /etc/pacman.conf - <<- EOF > $@
+	cat /etc/pacman.conf - <<- 'EOF' > $@
 		[apocos]
 		SigLevel = Optional TrustAll
-		Server = https://raw.github.com/PrepperArch/apocos-repo/main/any
+		Server = https://raw.github.com/PrepperArch/apocos-repo/main/$$arch
 	EOF
 
 build/chroots/root: | build/chroots/pacman.conf
@@ -21,12 +21,15 @@ build/chroots/root: | build/chroots/pacman.conf
 build/Packages:
 	git clone https://github.com/PrepperArch/Packages  build/Packages
 
-build-package-%: | build/Packages build/chroots/root
+update-packages: build/Packages
+	cd $(CURDIR)/build/Packages && git pull
+
+build-package-%: | update-packages build/chroots/root
 	cd $(CURDIR)/build/Packages/$* \
 		&& makechrootpkg -c -u -r $(CURDIR)/build/chroots -l$* -- makepkg -s \
 		&& (cp -n *.zst $(CURDIR)/any | true)
 
-build-sdr-package-%: | build/Packages build/chroots/root
+build-sdr-package-%: | update-packages build/chroots/root
 	cd $(CURDIR)/build/Packages/sdr/$* \
 		&& makechrootpkg -c -u -r $(CURDIR)/build/chroots -l$* -- makepkg -s \
 		&& (cp -n *.zst $(CURDIR)/x86_64 | true)
