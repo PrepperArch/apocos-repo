@@ -36,7 +36,7 @@ build-sdr-package-%: | update-packages build/chroots/root
 
 update-repo-%:
 	repo-add --prevent-downgrade --new \
-		$(CURDIR)/any/apocos.db.tar.gz $(CURDIR)/$*/*.zst \
+		$(CURDIR)/$*/apocos.db.tar.gz $(CURDIR)/$*/*.zst \
 		&& repo-add --remove $(CURDIR)/$*/apocos.db.tar.gz
 	rm $(CURDIR)/$*/apocos.db \
 		&& mv $(CURDIR)/$*/apocos.db.tar.gz $(CURDIR)/$*/apocos.db \
@@ -44,6 +44,8 @@ update-repo-%:
 	rm $(CURDIR)/$*/apocos.files \
 		&& mv $(CURDIR)/$*/apocos.files.tar.gz $(CURDIR)/$*/apocos.files \
 		&& ln -s apocos.files $(CURDIR)/$*/apocos.files.tar.gz
+
+update-repo: update-repo-any update-repo-x86_64
 
 clean:
 	sudo rm -rf build
