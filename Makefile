@@ -1,4 +1,5 @@
-PACKAGES=apocos-base apocos-desktop apocos-awesome apocos-hack apocos-sdr
+PACKAGES=\
+	apocos-base apocos-desktop apocos-awesome apocos-hack apocos-sdr
 
 .ONESHELL:
 
@@ -17,27 +18,32 @@ build/chroots/pacman.conf: | build/chroots
 build/chroots/root: | build/chroots/pacman.conf
 	mkarchroot -C $(CURDIR)/build/chroots/pacman.conf $(CURDIR)/build/chroots/root base-devel
 
-apocos-%: | clean-packages build/chroots/root
-	git clone https://github.com/PrepperArch/apocos-$*.git build/apocos-$* \
-		&& cd $(CURDIR)/build/apocos-$* \
-		&& makechrootpkg -c -u -r $(CURDIR)/build/chroots -lapocos-$* -- makepkg -s \
+build/Packages:
+	git clone https://github.com/PrepperArch/Packages  build/Packages
+
+build-package-%: | build/Packages build/chroots/root
+	cd $(CURDIR)/build/Packages/$* \
+		&& makechrootpkg -c -u -r $(CURDIR)/build/chroots -l$* -- makepkg -s \
 		&& (cp -n *.zst $(CURDIR)/any | true)
 
-build-all: $(PACKAGES) update-repo
+build-sdr-package-%: | build/Packages build/chroots/root
+	cd $(CURDIR)/build/Packages/sdr/$* \
+		&& makechrootpkg -c -u -r $(CURDIR)/build/chroots -l$* -- makepkg -s \
+		&& (cp -n *.zst $(CURDIR)/x86_64 | true)
 
-update-repo:
+update-repo-%:
 	repo-add --prevent-downgrade --new \
-		$(CURDIR)/any/apocos.db.tar.gz $(CURDIR)/any/*.zst \
-	&& repo-add --remove $(CURDIR)/any/apocos.db.tar.gz
-	rm $(CURDIR)/any/apocos.db \
-		&& mv $(CURDIR)/any/apocos.db.tar.gz $(CURDIR)/any/apocos.db \
-		&& ln -s apocos.db $(CURDIR)/any/apocos.db.tar.gz
-	rm $(CURDIR)/any/apocos.files \
-		&& mv $(CURDIR)/any/apocos.files.tar.gz $(CURDIR)/any/apocos.files \
-		&& ln -s apocos.files $(CURDIR)/any/apocos.files.tar.gz
+		$(CURDIR)/any/apocos.db.tar.gz $(CURDIR)/$*/*.zst \
+		&& repo-add --remove $(CURDIR)/$*/apocos.db.tar.gz
+	rm $(CURDIR)/$*/apocos.db \
+		&& mv $(CURDIR)/$*/apocos.db.tar.gz $(CURDIR)/$*/apocos.db \
+		&& ln -s apocos.db $(CURDIR)/$*/apocos.db.tar.gz
+	rm $(CURDIR)/$*/apocos.files \
+		&& mv $(CURDIR)/$*/apocos.files.tar.gz $(CURDIR)/$*/apocos.files \
+		&& ln -s apocos.files $(CURDIR)/$*/apocos.files.tar.gz
+
+update-repo: update-repo-any update-repo-x86_64
 
 clean:
-	sudo rm -rf build/chroots
+	sudo rm -rf build
 
-clean-packages:
-	rm -rf build/apocos*
