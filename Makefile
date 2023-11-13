@@ -45,8 +45,6 @@ update-repo-%:
 		&& mv $(CURDIR)/$*/apocos.files.tar.gz $(CURDIR)/$*/apocos.files \
 		&& ln -s apocos.files $(CURDIR)/$*/apocos.files.tar.gz
 
-update-repo: update-repo-any update-repo-x86_64
-
 clean:
 	sudo rm -rf build
 
